@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Appearance, ColorSchemeName } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '../constants/Colors';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -8,32 +9,8 @@ interface ThemeContextType {
   theme: 'light' | 'dark';
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
-  colors: typeof lightColors;
+  colors: typeof Colors.light;
 }
-
-const lightColors = {
-  primary: '#007AFF',
-  background: '#FFFFFF',
-  surface: '#F2F2F7',
-  text: '#000000',
-  textSecondary: '#8E8E93',
-  border: '#C6C6C8',
-  error: '#FF3B30',
-  success: '#34C759',
-  warning: '#FF9500',
-};
-
-const darkColors = {
-  primary: '#0A84FF',
-  background: '#000000',
-  surface: '#1C1C1E',
-  text: '#FFFFFF',
-  textSecondary: '#8E8E93',
-  border: '#38383A',
-  error: '#FF453A',
-  success: '#30D158',
-  warning: '#FF9F0A',
-};
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -72,7 +49,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const theme = getEffectiveTheme();
-  const colors = theme === 'dark' ? darkColors : lightColors;
+  const colors = theme === 'dark' ? Colors.dark : Colors.light;
 
   return (
     <ThemeContext.Provider value={{ theme, themeMode, setThemeMode, colors }}>

@@ -8,14 +8,18 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { createThemedStyles, spacing, borderRadius, typography, shadows, getCardStyle, getButtonStyle } from '../constants/Styles';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { colors, theme, themeMode, setThemeMode } = useTheme();
+  const themedStyles = createThemedStyles(colors);
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(
     user?.user_metadata?.full_name || ''
@@ -67,144 +71,157 @@ export default function ProfileScreen() {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      padding: 20,
-      paddingTop: 60,
+    gradientHeader: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xxxl,
+      borderBottomLeftRadius: borderRadius.xxl,
+      borderBottomRightRadius: borderRadius.xxl,
       alignItems: 'center',
+    },
+    headerContent: {
+      paddingTop: spacing.huge,
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      position: 'relative',
+      marginBottom: spacing.lg,
     },
     avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: colors.primary,
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 16,
+      borderWidth: 4,
+      borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     avatarText: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: 'white',
+      fontSize: typography.sizes.massive,
+      fontWeight: typography.weights.extrabold,
+      color: colors.textInverse,
     },
     displayName: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 8,
+      fontSize: typography.sizes.xxl,
+      fontWeight: typography.weights.extrabold,
+      color: colors.textInverse,
+      marginBottom: spacing.xs,
+      textAlign: 'center',
     },
     email: {
-      fontSize: 16,
-      color: colors.textSecondary,
+      fontSize: typography.sizes.base,
+      color: 'rgba(255, 255, 255, 0.8)',
+      fontWeight: typography.weights.medium,
+      textAlign: 'center',
+    },
+    content: {
+      marginTop: -spacing.xl,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
     },
     section: {
-      backgroundColor: colors.surface,
-      marginHorizontal: 20,
-      marginBottom: 20,
-      borderRadius: 12,
+      ...getCardStyle(colors, 'medium'),
+      marginBottom: spacing.lg,
       overflow: 'hidden',
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
       color: colors.text,
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 12,
+      padding: spacing.xl,
+      paddingBottom: spacing.md,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.borderLight,
     },
     menuItemLast: {
       borderBottomWidth: 0,
     },
     menuItemIcon: {
-      marginRight: 16,
+      marginRight: spacing.lg,
     },
     menuItemText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.medium,
       color: colors.text,
     },
     menuItemValue: {
-      fontSize: 16,
+      fontSize: typography.sizes.base,
       color: colors.textSecondary,
-      marginRight: 8,
+      marginRight: spacing.sm,
     },
     input: {
-      backgroundColor: colors.background,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      color: colors.text,
-      marginHorizontal: 20,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
+      ...themedStyles.input,
+      marginHorizontal: spacing.xl,
+      marginBottom: spacing.lg,
     },
     editButtons: {
       flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-      gap: 12,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
     },
     editButton: {
+      ...getButtonStyle(colors, 'primary'),
       flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: 8,
-      padding: 12,
-      alignItems: 'center',
     },
     cancelButton: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
+      ...getButtonStyle(colors, 'secondary'),
+      flex: 1,
     },
-    editButtonText: {
-      color: 'white',
-      fontSize: 16,
-      fontWeight: '600',
+    buttonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
     },
     cancelButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
       color: colors.text,
-      fontSize: 16,
-      fontWeight: '600',
     },
     themeOptions: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
     },
     themeOption: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: borderRadius.md,
+      marginBottom: spacing.sm,
+    },
+    themeOptionActive: {
+      backgroundColor: `${colors.primary}15`,
     },
     themeOptionText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.medium,
       color: colors.text,
-      marginLeft: 12,
+      marginLeft: spacing.md,
     },
     signOutButton: {
       backgroundColor: colors.error,
-      marginHorizontal: 20,
-      marginBottom: 20,
-      borderRadius: 12,
-      padding: 16,
+      marginHorizontal: spacing.xl,
+      marginBottom: spacing.xl,
+      borderRadius: borderRadius.lg,
+      paddingVertical: spacing.lg,
       alignItems: 'center',
+      ...shadows.medium,
+      shadowColor: colors.shadowColor,
     },
     signOutButtonText: {
-      color: 'white',
-      fontSize: 16,
-      fontWeight: '600',
+      color: colors.textInverse,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
     },
   });
 
@@ -216,116 +233,133 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {getInitials(
-              user?.user_metadata?.full_name || '',
-              user?.email || ''
-            )}
-          </Text>
-        </View>
-        <Text style={styles.displayName}>
-          {user?.user_metadata?.full_name || 'User'}
-        </Text>
-        <Text style={styles.email}>{user?.email}</Text>
-      </View>
+    <SafeAreaView style={themedStyles.container} edges={['bottom']}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={colors.gradientPrimary}
+          style={styles.gradientHeader}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitials(
+                    user?.user_metadata?.full_name || '',
+                    user?.email || ''
+                  )}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.displayName}>
+              {user?.user_metadata?.full_name || 'User'}
+            </Text>
+            <Text style={styles.email}>{user?.email}</Text>
+          </View>
+        </LinearGradient>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Profile Information</Text>
+        <View style={styles.content}>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Profile Information</Text>
         
         {editing ? (
           <>
-            <TextInput
-              style={styles.input}
-              placeholder="Display Name"
-              placeholderTextColor={colors.textSecondary}
-              value={displayName}
-              onChangeText={setDisplayName}
-            />
-            <View style={styles.editButtons}>
-              <TouchableOpacity
-                style={[styles.editButton, styles.cancelButton]}
-                onPress={() => {
-                  setEditing(false);
-                  setDisplayName(user?.user_metadata?.full_name || '');
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={handleUpdateProfile}
-                disabled={loading}
-              >
-                <Text style={styles.editButtonText}>
-                  {loading ? 'Saving...' : 'Save'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Display Name"
+                placeholderTextColor={colors.textSecondary}
+                value={displayName}
+                onChangeText={setDisplayName}
+              />
+              <View style={styles.editButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setEditing(false);
+                    setDisplayName(user?.user_metadata?.full_name || '');
+                  }}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={handleUpdateProfile}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>
+                    {loading ? 'Saving...' : 'Save'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
           </>
         ) : (
-          <TouchableOpacity
-            style={[styles.menuItem, styles.menuItemLast]}
-            onPress={() => setEditing(true)}
-          >
-            <Ionicons name="person" size={24} color={colors.primary} style={styles.menuItemIcon} />
-            <Text style={styles.menuItemText}>Display Name</Text>
-            <Text style={styles.menuItemValue}>
-              {user?.user_metadata?.full_name || 'Not set'}
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.themeOptions}>
-          {(['light', 'dark', 'system'] as const).map((mode) => (
             <TouchableOpacity
-              key={mode}
-              style={styles.themeOption}
-              onPress={() => setThemeMode(mode)}
+              style={[styles.menuItem, styles.menuItemLast]}
+              onPress={() => setEditing(true)}
             >
-              <Ionicons
-                name={themeMode === mode ? 'radio-button-on' : 'radio-button-off'}
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.themeOptionText}>
-                {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+              <Ionicons name="person" size={24} color={colors.primary} style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Display Name</Text>
+              <Text style={styles.menuItemValue}>
+                {user?.user_metadata?.full_name || 'Not set'}
               </Text>
-              <Ionicons
-                name={getThemeIcon(mode)}
-                size={20}
-                color={colors.textSecondary}
-              />
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+          )}
+          </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <View style={styles.menuItem}>
-          <Ionicons name="mail" size={24} color={colors.primary} style={styles.menuItemIcon} />
-          <Text style={styles.menuItemText}>Email</Text>
-          <Text style={styles.menuItemValue}>{user?.email}</Text>
-        </View>
-        <View style={[styles.menuItem, styles.menuItemLast]}>
-          <Ionicons name="time" size={24} color={colors.primary} style={styles.menuItemIcon} />
-          <Text style={styles.menuItemText}>Member Since</Text>
-          <Text style={styles.menuItemValue}>
-            {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
-          </Text>
-        </View>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Appearance</Text>
+            <View style={styles.themeOptions}>
+              {(['light', 'dark', 'system'] as const).map((mode) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={[
+                    styles.themeOption,
+                    themeMode === mode && styles.themeOptionActive,
+                  ]}
+                  onPress={() => setThemeMode(mode)}
+                >
+                  <Ionicons
+                    name={themeMode === mode ? 'radio-button-on' : 'radio-button-off'}
+                    size={24}
+                    color={colors.primary}
+                  />
+                  <Text style={styles.themeOptionText}>
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+                  </Text>
+                  <Ionicons
+                    name={getThemeIcon(mode)}
+                    size={20}
+                    color={colors.textTertiary}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            <View style={styles.menuItem}>
+              <Ionicons name="mail" size={24} color={colors.primary} style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Email</Text>
+              <Text style={styles.menuItemValue}>{user?.email}</Text>
+            </View>
+            <View style={[styles.menuItem, styles.menuItemLast]}>
+              <Ionicons name="time" size={24} color={colors.primary} style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Member Since</Text>
+              <Text style={styles.menuItemValue}>
+                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

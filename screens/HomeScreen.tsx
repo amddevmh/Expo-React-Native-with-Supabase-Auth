@@ -1,329 +1,375 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  RefreshControl,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+  Animated,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { supabase } from '../lib/supabase';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+import { createThemedStyles, spacing, borderRadius, typography, shadows, getCardStyle } from '../constants/Styles';
 
-interface FileItem {
+const { width } = Dimensions.get('window');
+
+interface FeatureCard {
   id: string;
-  name: string;
-  size: number;
-  created_at: string;
-  public_url?: string;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  onPress: () => void;
 }
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
+  const themedStyles = createThemedStyles(colors);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  
   useEffect(() => {
-    loadFiles();
+    // Animate in sequence for a polished entrance
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
-
-  const loadFiles = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase.storage
-        .from('user-files')
-        .list(user.id, {
-          limit: 100,
-          offset: 0,
-        });
-
-      if (error) throw error;
-
-      const filesWithUrls = await Promise.all(
-        (data || []).map(async (file) => {
-          const { data: urlData } = supabase.storage
-            .from('user-files')
-            .getPublicUrl(`${user.id}/${file.name}`);
-
-          return {
-            id: file.id || file.name,
-            name: file.name,
-            size: file.metadata?.size || 0,
-            created_at: file.created_at || new Date().toISOString(),
-            public_url: urlData.publicUrl,
-          };
-        })
-      );
-
-      setFiles(filesWithUrls);
-    } catch (error: any) {
-      console.error('Error loading files:', error.message);
-    }
+  
+  const handleQuickActionPress = (actionTitle: string) => {
+    // Add haptic feedback and scale animation
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 300,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    console.log(`${actionTitle} pressed`);
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadFiles();
-    setRefreshing(false);
-  };
+  const features: FeatureCard[] = [
+    {
+      id: '1',
+      title: 'Analytics',
+      description: 'View your app analytics and insights',
+      icon: 'analytics',
+      color: colors.info,
+      onPress: () => console.log('Analytics pressed'),
+    },
+    {
+      id: '2',
+      title: 'Settings',
+      description: 'Customize your app preferences',
+      icon: 'settings',
+      color: colors.accent,
+      onPress: () => console.log('Settings pressed'),
+    },
+    {
+      id: '3',
+      title: 'Notifications',
+      description: 'Manage your notification settings',
+      icon: 'notifications',
+      color: colors.warning,
+      onPress: () => console.log('Notifications pressed'),
+    },
+    {
+      id: '4',
+      title: 'Support',
+      description: 'Get help and contact support',
+      icon: 'help-circle',
+      color: colors.success,
+      onPress: () => console.log('Support pressed'),
+    },
+  ];
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      uploadFile(result.assets[0].uri, result.assets[0].fileName || 'image.jpg');
-    }
-  };
-
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: '*/*',
-      copyToCacheDirectory: true,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      uploadFile(result.assets[0].uri, result.assets[0].name);
-    }
-  };
-
-  const uploadFile = async (uri: string, fileName: string) => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const arrayBuffer = await new Response(blob).arrayBuffer();
-
-      const { error } = await supabase.storage
-        .from('user-files')
-        .upload(`${user.id}/${fileName}`, arrayBuffer, {
-          contentType: blob.type,
-          upsert: true,
-        });
-
-      if (error) throw error;
-
-      Alert.alert('Success', 'File uploaded successfully');
-      loadFiles();
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteFile = async (fileName: string) => {
-    if (!user) return;
-
-    Alert.alert(
-      'Delete File',
-      'Are you sure you want to delete this file?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase.storage
-                .from('user-files')
-                .remove([`${user.id}/${fileName}`]);
-
-              if (error) throw error;
-              loadFiles();
-            } catch (error: any) {
-              Alert.alert('Error', error.message);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  const quickActions = [
+    { id: '1', title: 'Create', icon: 'add-circle', color: colors.primary },
+    { id: '2', title: 'Share', icon: 'share', color: colors.secondary },
+    { id: '3', title: 'Favorite', icon: 'heart', color: colors.error },
+    { id: '4', title: 'Search', icon: 'search', color: colors.info },
+  ];
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
+    gradientHeader: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xxxl,
+      borderBottomLeftRadius: borderRadius.xxl,
+      borderBottomRightRadius: borderRadius.xxl,
     },
-    header: {
-      padding: 20,
-      paddingTop: 60,
+    headerContent: {
+      paddingTop: spacing.huge,
     },
     greeting: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 8,
+      fontSize: typography.sizes.huge,
+      fontWeight: typography.weights.extrabold,
+      color: colors.textInverse,
+      marginBottom: spacing.sm,
+      letterSpacing: 0.5,
     },
     subtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
+      fontSize: typography.sizes.lg,
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontWeight: typography.weights.medium,
     },
-    actionButtons: {
+    statsContainer: {
       flexDirection: 'row',
-      padding: 20,
-      gap: 12,
+      paddingHorizontal: spacing.xl,
+      marginTop: -spacing.xl,
+      marginBottom: spacing.xxl,
+      gap: spacing.md,
     },
-    actionButton: {
+    statCard: {
+      ...getCardStyle(colors, 'medium'),
       flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      padding: 16,
       alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
     },
-    actionButtonText: {
-      color: 'white',
-      fontSize: 16,
-      fontWeight: '600',
-      marginLeft: 8,
+    statNumber: {
+      fontSize: typography.sizes.xxxl,
+      fontWeight: typography.weights.extrabold,
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.semibold,
+    },
+    quickActionsContainer: {
+      paddingHorizontal: spacing.xl,
+      marginBottom: spacing.xxxl,
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.extrabold,
       color: colors.text,
-      paddingHorizontal: 20,
-      marginBottom: 16,
+      marginBottom: spacing.lg,
+      letterSpacing: 0.3,
     },
-    fileItem: {
-      backgroundColor: colors.surface,
-      marginHorizontal: 20,
-      marginBottom: 12,
-      borderRadius: 12,
-      padding: 16,
+    quickActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    quickActionButton: {
+      ...getCardStyle(colors, 'low'),
+      flex: 1,
+      alignItems: 'center',
+    },
+    quickActionIcon: {
+      marginBottom: spacing.sm,
+    },
+    quickActionText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    featuresContainer: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
+    },
+    featureCard: {
+      ...getCardStyle(colors, 'high'),
+      marginBottom: spacing.lg,
       flexDirection: 'row',
       alignItems: 'center',
     },
-    fileInfo: {
-      flex: 1,
-      marginLeft: 12,
-    },
-    fileName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 4,
-    },
-    fileDetails: {
-      fontSize: 14,
-      color: colors.textSecondary,
-    },
-    deleteButton: {
-      padding: 8,
-    },
-    emptyState: {
-      flex: 1,
-      justifyContent: 'center',
+    featureIconContainer: {
+      width: 60,
+      height: 60,
+      borderRadius: borderRadius.lg,
       alignItems: 'center',
-      paddingHorizontal: 40,
+      justifyContent: 'center',
+      marginRight: spacing.xl,
     },
-    emptyStateText: {
-      fontSize: 18,
+    featureContent: {
+      flex: 1,
+    },
+    featureTitle: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    featureDescription: {
+      fontSize: typography.sizes.base,
       color: colors.textSecondary,
-      textAlign: 'center',
-      marginTop: 16,
+      lineHeight: typography.sizes.base * typography.lineHeights.relaxed,
+    },
+    chevron: {
+      opacity: 0.6,
     },
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>
-          Hello, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}! 👋
-        </Text>
-        <Text style={styles.subtitle}>
-          Welcome to your personal storage space
-        </Text>
-      </View>
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={pickImage}
-          disabled={loading}
-        >
-          <Ionicons name="image" size={20} color="white" />
-          <Text style={styles.actionButtonText}>Add Photo</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={pickDocument}
-          disabled={loading}
-        >
-          <Ionicons name="document" size={20} color="white" />
-          <Text style={styles.actionButtonText}>Add File</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>Your Files</Text>
-
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+    <SafeAreaView style={themedStyles.container} edges={['bottom']}>
+      <LinearGradient
+        colors={colors.gradientPrimary}
+        style={styles.gradientHeader}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        {files.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="folder-open-outline" size={64} color={colors.textSecondary} />
-            <Text style={styles.emptyStateText}>
-              No files yet. Upload your first photo or document to get started!
-            </Text>
-          </View>
-        ) : (
-          files.map((file) => (
-            <View key={file.id} style={styles.fileItem}>
-              <Ionicons
-                name={file.name.match(/\.(jpg|jpeg|png|gif)$/i) ? 'image' : 'document'}
-                size={24}
-                color={colors.primary}
-              />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileName}>{file.name}</Text>
-                <Text style={styles.fileDetails}>
-                  {formatFileSize(file.size)} • {new Date(file.created_at).toLocaleDateString()}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => deleteFile(file.name)}
+        <View style={styles.headerContent}>
+          <Text style={styles.greeting}>
+            Hello, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}! 👋
+          </Text>
+          <Text style={styles.subtitle}>
+            Welcome to your modern workspace
+          </Text>
+        </View>
+      </LinearGradient>
+
+      <Animated.View 
+        style={[
+          styles.statsContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }
+        ]}
+      >
+        <Animated.View style={[styles.statCard, { transform: [{ scale: scaleAnim }] }]}>
+          <Text style={styles.statNumber}>24</Text>
+          <Text style={styles.statLabel}>Projects</Text>
+        </Animated.View>
+        <Animated.View style={[styles.statCard, { transform: [{ scale: scaleAnim }] }]}>
+          <Text style={styles.statNumber}>12</Text>
+          <Text style={styles.statLabel}>Completed</Text>
+        </Animated.View>
+        <Animated.View style={[styles.statCard, { transform: [{ scale: scaleAnim }] }]}>
+          <Text style={styles.statNumber}>8</Text>
+          <Text style={styles.statLabel}>In Progress</Text>
+        </Animated.View>
+      </Animated.View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.View 
+          style={[
+            styles.quickActionsContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActions}>
+            {quickActions.map((action, index) => (
+              <Animated.View
+                key={action.id}
+                style={{
+                  opacity: fadeAnim,
+                  transform: [
+                    { translateY: slideAnim },
+                    { scale: scaleAnim }
+                  ],
+                }}
               >
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
+                <TouchableOpacity
+                  style={styles.quickActionButton}
+                  onPress={() => handleQuickActionPress(action.title)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Ionicons
+                      name={action.icon as any}
+                      size={28}
+                      color={action.color}
+                    />
+                  </View>
+                  <Text style={styles.quickActionText}>{action.title}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
+
+        <Animated.View 
+          style={[
+            styles.featuresContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <Text style={styles.sectionTitle}>Features</Text>
+          {features.map((feature, index) => (
+            <Animated.View
+              key={feature.id}
+              style={{
+                opacity: fadeAnim,
+                transform: [
+                  { translateY: slideAnim }
+                ],
+              }}
+            >
+              <TouchableOpacity
+                style={styles.featureCard}
+                onPress={feature.onPress}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    { backgroundColor: `${feature.color}15` },
+                  ]}
+                >
+                  <Ionicons
+                    name={feature.icon as any}
+                    size={28}
+                    color={feature.color}
+                  />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDescription}>
+                    {feature.description}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.textTertiary}
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
-            </View>
-          ))
-        )}
+            </Animated.View>
+          ))}
+        </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

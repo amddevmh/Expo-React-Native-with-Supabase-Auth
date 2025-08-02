@@ -1,16 +1,14 @@
 # React Native Supabase Template 🚀
 
-A complete React Native template with Supabase authentication, storage, and modern UI features. This template provides everything you need to quickly start building a production-ready mobile app with user authentication, file storage, and a beautiful interface.
+A complete React Native template with Expo, Supabase authentication, and modern UI features. This template provides everything you need to quickly start building a production-ready mobile app with user authentication, and a beautiful interface.
 
 ## ✨ Features
 
-- 🔐 **Authentication**: Email/password and Google OAuth login
+- 🔐 **Authentication**: Email/password and Google OAuth login(Can easily be changed to other providers)
 - 🏠 **Home Screen**: File upload and management interface
 - 👤 **Profile Screen**: User profile management and settings
-- 🧭 **Navigation**: Bottom tab navigation with React Navigation
 - 🌓 **Theme System**: Dark/Light/System mode switching
-- 📱 **Cross-Platform**: Ready for iOS and Android deployment
-- 💾 **File Storage**: Supabase Storage integration for photos and documents
+- 📱 **Cross-Platform Friendly**: Ready for iOS and Android deployment
 - 🎨 **Modern UI**: Clean, responsive design with proper theming
 
 ## 🚀 Quick Start
@@ -44,22 +42,14 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-client-id
 EXPO_PUBLIC_APP_SCHEME=com.yourcompany.yourapp
 ```
 
-### 3. Supabase Setup
-
-Create a storage bucket in your Supabase project:
-
-1. Go to Storage in your Supabase dashboard
-2. Create a new bucket called `user-files`
-3. Set the bucket to **Public** or configure RLS policies
-4. Enable Google OAuth in Authentication → Providers
-
 ### 4. Start Development
 
 ```bash
-npx expo start
+pnpm start
 ```
 
 Choose your preferred development environment:
+
 - Press `a` for Android emulator
 - Press `i` for iOS simulator
 - Scan QR code with Expo Go app
@@ -68,22 +58,15 @@ Choose your preferred development environment:
 
 ### Android
 
-```bash
-npx expo run:android
-```
+tbd
 
 ### iOS
 
-```bash
-npx expo run:ios
-```
+tbd
 
 ### Production Build
 
-```bash
-npx expo build:android
-npx expo build:ios
-```
+tbd
 
 ## 🔧 Configuration
 
@@ -108,6 +91,7 @@ Update the bundle identifier in `app.json`:
 ### Google OAuth Setup
 
 1. **Google Cloud Console**:
+
    - Create Android OAuth Client ID with your package name and SHA-1 fingerprint
    - Create Web OAuth Client ID for Supabase integration
 
@@ -138,15 +122,7 @@ Update the bundle identifier in `app.json`:
 
 ### Themes
 
-Customize colors in `contexts/ThemeContext.tsx`:
-
-```typescript
-const lightColors = {
-  primary: '#007AFF',
-  background: '#FFFFFF',
-  // ... other colors
-};
-```
+Customize colors in `constants/Colors.ts`:
 
 ### Navigation
 
