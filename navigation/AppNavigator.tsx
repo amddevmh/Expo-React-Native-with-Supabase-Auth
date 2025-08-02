@@ -167,9 +167,6 @@ function MainDrawer() {
           },
           drawerType: 'slide',
           overlayColor: colors.backdrop,
-          sceneContainerStyle: {
-            backgroundColor: colors.background,
-          },
         }}
       >
       <Drawer.Screen 
@@ -211,7 +208,6 @@ function MainDrawer() {
 
 export default function AppNavigator() {
   const { user, loading } = useAuth();
-  const { colors, theme } = useTheme();
 
   if (loading) {
     return null; // You could add a loading screen here

@@ -9,7 +9,38 @@ interface ThemeContextType {
   theme: 'light' | 'dark';
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
-  colors: typeof Colors.light;
+  colors: {
+    primary: string;
+    primaryLight: string;
+    primaryDark: string;
+    secondary: string;
+    accent: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+    text: string;
+    textSecondary: string;
+    textTertiary: string;
+    textInverse: string;
+    background: string;
+    backgroundSecondary: string;
+    surface: string;
+    surfaceElevated: string;
+    border: string;
+    borderLight: string;
+    overlay: string;
+    backdrop: string;
+    gradientPrimary: readonly [string, string, ...string[]];
+    gradientSecondary: readonly [string, string, ...string[]];
+    gradientSurface: readonly [string, string, ...string[]];
+    shadowColor: string;
+    shadowLight: string;
+    shadowMedium: string;
+    shadowStrong: string;
+    tint: string;
+    icon: string;
+  };
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

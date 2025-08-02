@@ -42,15 +42,19 @@ export interface ThemeColors {
   backdrop: string;
   
   // Gradients
-  gradientPrimary: string[];
-  gradientSecondary: string[];
-  gradientSurface: string[];
+  gradientPrimary: readonly [string, string, ...string[]];
+  gradientSecondary: readonly [string, string, ...string[]];
+  gradientSurface: readonly [string, string, ...string[]];
   
   // Shadow colors
   shadowColor: string;
   shadowLight: string;
   shadowMedium: string;
   shadowStrong: string;
+  
+  // Legacy compatibility
+  tint: string;
+  icon: string;
 }
 
 // Design tokens for consistent spacing and sizing
