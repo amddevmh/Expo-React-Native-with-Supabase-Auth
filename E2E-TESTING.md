@@ -3,20 +3,25 @@
 ## 🚀 First Time Setup
 
 **1. Install dependencies:**
+
 ```bash
 npm install
+npm install expo-modules-core  # Required for Android builds
 ```
 
 **2. Update app ID (use your `app.json` android.package):**
+
 - `.maestro/app-launch-test.yaml` → Change `appId:` to match your package name
 - Line 72 below → Update package name in clear data command
 
 **3. Install Maestro:**
+
 ```bash
 curl -Ls "https://get.maestro.mobile.dev" | bash
 ```
 
 **4. Requirements:**
+
 - Android SDK installed
 - Android emulator available
 - `.env` file configured
@@ -33,46 +38,35 @@ npm run e2e:env:stop       # Stop emulator
 
 ## Workflow
 
-**Option 1**: One command
-
-```bash
-npm run e2e:full
-```
-
-**Option 2**: Step by step
-
-```bash
-npm run e2e:env:start      # Once
-npm run e2e:test:can-test  # Test app launch
-npm run e2e:test:all       # Or run all tests
-npm run e2e:env:stop       # When done
-```
-
-## What It Tests
-
-✅ App launches successfully  
-✅ Ready for Phase 2 (notifications)
-
-## Metro + E2E Development
-
-**Best**: Separate terminals
+**Separate terminals**
 
 ```bash
 # Terminal 1
 npm start
 
 # Terminal 2
-npm run e2e:test:all(req, started test env)
-```
-
-**Stop background Metro**:
-
-```bash
-fg 1         # Bring to front, then Ctrl+C
-kill 12345   # Or kill by PID
+npm run e2e:env:start      # Once
+npm run e2e:test:can-test  # Test app launch
+npm run e2e:test:all       # Or run all tests
+npm run e2e:env:stop       # When done
 ```
 
 ## Troubleshooting
+
+**Build errors**: If Android build fails with missing ExpoModulesPackage:
+
+```bash
+npm install expo-modules-core
+```
+
+**Multiple emulator error**: Stop existing emulator first:
+
+```bash
+npm run e2e:env:stop    # Stop emulator
+npm run e2e:env:start   # Start fresh
+```
+
+**General troubleshooting**:
 
 ```bash
 npm run e2e:env:status  # Check status
@@ -83,5 +77,5 @@ npm run e2e:full        # Start fresh
 ## Clear app data (nuclear option)
 
 ```bash
-adb shell pm clear com.amddev.ReactNativeSupabaseTemplate
+adb shell pm clear com.template.reactnativesupabase (use your app ID)
 ```

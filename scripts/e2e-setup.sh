@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Change to project directory (script should run from project root)
+cd "$(dirname "$0")/.."
+
 echo "🚀 Starting E2E environment setup..."
 
 # Start emulator in background
@@ -16,9 +19,9 @@ echo "🔍 Checking emulator connection..."
 adb wait-for-device
 echo "✅ Emulator connected!"
 
-# Build and install app (development mode with bundled JS)
+# Build and install native Android app
 echo "🔨 Building and installing app..."
-expo run:android --variant release
+expo run:android
 
 # Check if installation was successful
 if [ $? -eq 0 ]; then
