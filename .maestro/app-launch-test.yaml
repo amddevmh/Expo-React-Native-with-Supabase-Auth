@@ -1,0 +1,4 @@
+appId: com.amddev.ReactNativeSupabaseTemplate
+---
+- launchApp
+- waitForAnimationToEnd

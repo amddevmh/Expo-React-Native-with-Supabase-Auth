@@ -8,7 +8,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "e2e:env:start": "./scripts/e2e-setup.sh",
+    "e2e:env:status": "echo '=== Emulator Status ===' && adb devices && echo '=== Emulator Processes ===' && ps aux | grep emulator | grep -v grep || echo 'No emulator processes found'",
+    "e2e:env:stop": "adb emu kill && echo 'Emulator stopped'",
+    "e2e:test:can-test": "export PATH=\"$PATH\":\"$HOME/.maestro/bin\" && maestro test .maestro/app-launch-test.yaml",
+    "e2e:test:all": "export PATH=\"$PATH\":\"$HOME/.maestro/bin\" && maestro test .maestro/",
+    "e2e:full": "npm run e2e:env:start && sleep 10 && npm run e2e:test:all && echo '\\n=== E2E Tests Complete ===' && npm run e2e:env:status"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
