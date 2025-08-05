@@ -25,6 +25,7 @@ curl -Ls "https://get.maestro.mobile.dev" | bash
 - Android SDK installed
 - Android emulator available
 - `.env` file configured
+- node version > 20
 
 ## Quick Commands
 
